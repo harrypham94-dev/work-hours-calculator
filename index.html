@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Work Hours Calculator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col antialiased">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-100 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-xl shadow-md shadow-indigo-100">
+                    <i data-lucide="clock" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900">ShiftCalc</h1>
+                    <p class="text-xs text-slate-500">Work Hours & Checkout Planner</p>
+                </div>
+            </div>
+            <div class="text-sm font-medium text-slate-500 flex items-center space-x-2">
+                <span class="inline-block w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span id="current-time-badge">Loading local time...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Panel: Inputs -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-6">
+                    <div class="flex items-center justify-between border-b border-slate-50 pb-4">
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="sliders" class="w-5 h-5 text-indigo-600"></i>
+                            Shift Settings
+                        </h2>
+                        <button id="reset-btn" class="text-xs text-slate-500 hover:text-rose-600 transition flex items-center gap-1 font-medium">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+                        </button>
+                    </div>
+
+                    <!-- Input: Check-In -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label for="check-in" class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 bg-indigo-500 rounded-full"></span>
+                                Check-in Time
+                            </label>
+                            <button type="button" onclick="setTimeToNow('check-in')" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                                <i data-lucide="map-pin" class="w-3 h-3"></i> Set Now
+                            </button>
+                        </div>
+                        <input type="time" id="check-in" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-lg font-medium text-slate-800 transition">
+                    </div>
+
+                    <!-- Input: Lunch Break -->
+                    <div class="space-y-3">
+                        <label for="lunch" class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 bg-amber-500 rounded-full"></span>
+                            Lunch Break Duration
+                        </label>
+                        <div class="relative">
+                            <input type="number" id="lunch" min="0" max="240" class="w-full pl-4 pr-16 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-lg font-medium text-slate-800 transition" placeholder="e.g. 60">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">mins</span>
+                        </div>
+                        <!-- Quick Presets -->
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" onclick="setLunchPreset(30)" class="lunch-preset-btn text-xs py-2 px-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl font-medium transition text-slate-600" data-val="30">30 min</button>
+                            <button type="button" onclick="setLunchPreset(45)" class="lunch-preset-btn text-xs py-2 px-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl font-medium transition text-slate-600" data-val="45">45 min</button>
+                            <button type="button" onclick="setLunchPreset(60)" class="lunch-preset-btn text-xs py-2 px-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl font-medium transition text-slate-600" data-val="60">1 Hour</button>
+                            <button type="button" onclick="setLunchPreset(90)" class="lunch-preset-btn text-xs py-2 px-1 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl font-medium transition text-slate-600" data-val="90">1.5 Hr</button>
+                        </div>
+                    </div>
+
+                    <!-- Input: Check-Out -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label for="check-out" class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 bg-rose-500 rounded-full"></span>
+                                Check-out Time
+                            </label>
+                            <button type="button" onclick="setTimeToNow('check-out')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2.5 py-1 rounded-lg transition flex items-center gap-1">
+                                <i data-lucide="log-out" class="w-3 h-3"></i> Set Now
+                            </button>
+                        </div>
+                        <input type="time" id="check-out" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-lg font-medium text-slate-800 transition">
+                    </div>
+                </div>
+
+                <!-- Info Banner -->
+                <div class="bg-indigo-50 border border-indigo-100 rounded-3xl p-5 flex gap-4">
+                    <div class="text-indigo-600 shrink-0">
+                        <i data-lucide="info" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-indigo-900 mb-0.5">Automated Tracker</h4>
+                        <p class="text-xs text-indigo-700 leading-relaxed">
+                            Adjust check-in and break times to dynamically see targets. The table on the right displays exact departure benchmarks to avoid under/over-working.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Outputs / Tables -->
+            <div class="lg:col-span-7 space-y-6">
+                
+                <!-- Calculation Results Dashboard -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-6">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-50 pb-4">
+                        <i data-lucide="activity" class="w-5 h-5 text-emerald-500"></i>
+                        Live Calculation
+                    </h2>
+
+                    <!-- Main Stats Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Total Elapsed Time -->
+                        <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                            <span class="text-xs font-semibold text-slate-500 block uppercase tracking-wider mb-1">Elapsed Duration</span>
+                            <div class="flex items-baseline space-x-2">
+                                <span id="elapsed-time-display" class="text-3xl font-black text-slate-800">--h --m</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">Total time spent at work (gross)</p>
+                        </div>
+
+                        <!-- Pure Working Time -->
+                        <div class="bg-indigo-600/5 rounded-2xl p-4 border border-indigo-50">
+                            <span class="text-xs font-semibold text-indigo-500 block uppercase tracking-wider mb-1">Net Working Time</span>
+                            <div class="flex items-baseline space-x-2">
+                                <span id="net-time-display" class="text-3xl font-black text-indigo-600">--h --m</span>
+                            </div>
+                            <p class="text-xs text-indigo-400 mt-1">Total elapsed minus lunch break</p>
+                        </div>
+                    </div>
+
+                    <!-- Graphical Progress Bar -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-500">8-Hour Standard Day Progress</span>
+                            <span id="progress-percent" class="font-black text-indigo-600">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                            <div id="progress-bar" class="bg-indigo-600 h-full w-0 transition-all duration-500 ease-out rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Alerts for working time standard -->
+                    <div id="status-card" class="hidden p-4 rounded-2xl border flex items-start gap-3">
+                        <div id="status-icon" class="shrink-0"></div>
+                        <div>
+                            <h4 id="status-title" class="text-sm font-bold"></h4>
+                            <p id="status-description" class="text-xs mt-0.5"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proposed Check-Out Targets Table -->
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="target" class="w-5 h-5 text-indigo-600"></i>
+                            Proposed Checkout Schedule
+                        </h2>
+                        <p class="text-xs text-slate-500 mt-1">Based on your Check-in and Lunch settings</p>
+                    </div>
+
+                    <div class="overflow-x-auto rounded-2xl border border-slate-100">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                                    <th class="py-4 px-6">Work Duration Goal</th>
+                                    <th class="py-4 px-6">Required Checkout Time</th>
+                                    <th class="py-4 px-6 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="proposed-table-body" class="divide-y divide-slate-100 text-sm">
+                                <!-- Dynamic rows go here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 text-center space-y-2">
+            <p class="text-sm">&copy; 2026 ShiftCalc. Engineered to optimize daily productivity patterns.</p>
+            <p class="text-xs text-slate-600">Calculations based on 24-hour daily boundaries. All calculations occur strictly client-side.</p>
+        </div>
+    </footer>
+
+    <!-- Logic Controller Script -->
+    <script>
+        // DOM Elements
+        const checkInInput = document.getElementById('check-in');
+        const checkOutInput = document.getElementById('check-out');
+        const lunchInput = document.getElementById('lunch');
+        const elapsedDisplay = document.getElementById('elapsed-time-display');
+        const netDisplay = document.getElementById('net-time-display');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const statusCard = document.getElementById('status-card');
+        const statusIcon = document.getElementById('status-icon');
+        const statusTitle = document.getElementById('status-title');
+        const statusDescription = document.getElementById('status-description');
+        const proposedTableBody = document.getElementById('proposed-table-body');
+        const resetBtn = document.getElementById('reset-btn');
+        const currentTimeBadge = document.getElementById('current-time-badge');
+
+        // Target lists requested: 8h, 8h30 (8.5h), 9h, 9h30 (9.5h), 10h
+        const TARGETS = [
+            { label: "8 hours", hours: 8, key: 480 },
+            { label: "8 hours 30 mins", hours: 8.5, key: 510 },
+            { label: "9 hours", hours: 9, key: 540 },
+            { label: "9 hours 30 mins", hours: 9.5, key: 570 },
+            { label: "10 hours", hours: 10, key: 600 }
+        ];
+
+        // Default initializations
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            
+            // Set default: Check-in at 08:30, Lunch 60 mins, Checkout to 17:30
+            checkInInput.value = "08:30";
+            checkOutInput.value = "17:30";
+            lunchInput.value = "60";
+
+            // Add events to calculate on any changes
+            [checkInInput, checkOutInput, lunchInput].forEach(el => {
+                el.addEventListener('input', calculateShift);
+            });
+
+            resetBtn.addEventListener('click', resetToDefaults);
+
+            // Start clock badge
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // Run initial calculation
+            calculateShift();
+        });
+
+        function updateClock() {
+            const now = new Date();
+            const formatOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            currentTimeBadge.innerText = `Current Time: ${now.toLocaleTimeString([], formatOptions)}`;
+        }
+
+        function resetToDefaults() {
+            checkInInput.value = "08:30";
+            checkOutInput.value = "17:30";
+            lunchInput.value = "60";
+            updatePresetButtonsSelection(60);
+            calculateShift();
+        }
+
+        // Set current time helper
+        function setTimeToNow(targetId) {
+            const now = new Date();
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            
+            if (targetId === 'check-in') {
+                checkInInput.value = `${hrs}:${mins}`;
+            } else if (targetId === 'check-out') {
+                checkOutInput.value = `${hrs}:${mins}`;
+            }
+            calculateShift();
+        }
+
+        // Preset Lunch Buttons
+        function setLunchPreset(minutes) {
+            lunchInput.value = minutes;
+            updatePresetButtonsSelection(minutes);
+            calculateShift();
+        }
+
+        function updatePresetButtonsSelection(minutes) {
+            document.querySelectorAll('.lunch-preset-btn').forEach(btn => {
+                const val = parseInt(btn.getAttribute('data-val'));
+                if (val === minutes) {
+                    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+                    btn.classList.remove('bg-slate-100', 'text-slate-600', 'hover:bg-indigo-50');
+                } else {
+                    btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+                    btn.classList.add('bg-slate-100', 'text-slate-600', 'hover:bg-indigo-50');
+                }
+            });
+        }
+
+        // Convert "HH:MM" string to minutes from start of day
+        function parseTimeToMinutes(timeStr) {
+            if (!timeStr) return 0;
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            return (hours * 60) + minutes;
+        }
+
+        // Convert minutes to "HH:MM" 24h format
+        function formatMinutesToTime(totalMinutes) {
+            // Handle overflow over 24 hours just in case
+            const wrappedMinutes = (totalMinutes + 1440) % 1440; 
+            const hours = Math.floor(wrappedMinutes / 60);
+            const minutes = wrappedMinutes % 60;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        // Format duration into readable "Xh Ym" format
+        function formatDuration(totalMinutes) {
+            if (totalMinutes < 0) return "--";
+            const hours = Math.floor(totalMinutes / 60);
+            const mins = totalMinutes % 60;
+            return `${hours}h ${mins}m`;
+        }
+
+        // Master controller function
+        function calculateShift() {
+            const checkInMins = parseTimeToMinutes(checkInInput.value);
+            const checkOutMins = parseTimeToMinutes(checkOutInput.value);
+            let lunchMins = parseInt(lunchInput.value) || 0;
+
+            // Simple validation of lunch input
+            if (lunchMins < 0) lunchMins = 0;
+
+            // 1. Calculate Gross Elapsed Time
+            let elapsedMins = checkOutMins - checkInMins;
+            
+            // Handle wrapping over midnight (if check-out is next day)
+            if (elapsedMins < 0) {
+                elapsedMins += 1440; // Add 24 hours
+            }
+
+            // 2. Calculate Net Working Time
+            let netMins = elapsedMins - lunchMins;
+            if (netMins < 0) netMins = 0;
+
+            // Render calculations
+            if (checkInInput.value && checkOutInput.value) {
+                elapsedDisplay.innerText = formatDuration(elapsedMins);
+                netDisplay.innerText = formatDuration(netMins);
+
+                // Progress Bar: 8h target is 480 mins
+                const progressRatio = Math.min((netMins / 480) * 100, 120); // cap visual at 120%
+                progressBar.style.width = `${Math.min(progressRatio, 100)}%`;
+                progressPercent.innerText = `${Math.round((netMins / 480) * 100)}%`;
+
+                // Adjust Progress Bar Color based on thresholds
+                if (netMins >= 480) {
+                    progressBar.className = "bg-emerald-500 h-full transition-all duration-500 ease-out rounded-full";
+                    progressPercent.className = "font-black text-emerald-600";
+                } else {
+                    progressBar.className = "bg-indigo-600 h-full transition-all duration-500 ease-out rounded-full";
+                    progressPercent.className = "font-black text-indigo-600";
+                }
+
+                // Alert and Status Render
+                renderStatusMessage(netMins);
+            } else {
+                elapsedDisplay.innerText = "--h --m";
+                netDisplay.innerText = "--h --m";
+                progressBar.style.width = "0%";
+                progressPercent.innerText = "0%";
+                statusCard.classList.add('hidden');
+            }
+
+            // 3. Render proposed checkout schedule table
+            renderProposedTable(checkInMins, lunchMins, netMins);
+        }
+
+        function renderStatusMessage(netMins) {
+            statusCard.classList.remove('hidden');
+            if (netMins >= 480) {
+                // Earned standard hours
+                statusCard.className = "p-4 rounded-2xl border flex items-start gap-3 bg-emerald-50 border-emerald-100 text-emerald-950";
+                statusIcon.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>`;
+                statusTitle.innerText = "Daily Target Secured!";
+                const overTime = netMins - 480;
+                statusDescription.innerText = overTime > 0 
+                    ? `You've worked your standard 8 hours plus ${formatDuration(overTime)} of overtime. Ready to pack up!`
+                    : "Exactly 8 hours complete! Great job matching your target today.";
+            } else {
+                // Under standard hours
+                statusCard.className = "p-4 rounded-2xl border flex items-start gap-3 bg-amber-50 border-amber-100 text-amber-950";
+                statusIcon.innerHTML = `<i data-lucide="alert-triangle" class="w-5 h-5 text-amber-600"></i>`;
+                statusTitle.innerText = "Target Incomplete";
+                const remaining = 480 - netMins;
+                statusDescription.innerText = `You need ${formatDuration(remaining)} more of net working time to secure your 8-hour shift goal.`;
+            }
+            lucide.createIcons();
+        }
+
+        function renderProposedTable(checkInMins, lunchMins, currentNetMins) {
+            proposedTableBody.innerHTML = '';
+
+            TARGETS.forEach(target => {
+                // Required checkout = checkin + target duration in mins + lunch duration in mins
+                const requiredCheckoutMins = checkInMins + target.key + lunchMins;
+                const formattedTime = formatMinutesToTime(requiredCheckoutMins);
+                
+                const isAchieved = currentNetMins >= target.key;
+                
+                // Styling classes for highlights
+                let rowClass = "hover:bg-slate-50 transition";
+                let statusBadge = "";
+
+                if (isAchieved) {
+                    rowClass = "bg-emerald-50/40 text-emerald-900 hover:bg-emerald-50 transition";
+                    statusBadge = `<span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                                    <i data-lucide="check" class="w-3.5 h-3.5"></i> Achieved
+                                  </span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-600 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                                    Pending
+                                  </span>`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = rowClass;
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-semibold text-slate-700">${target.label}</td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center gap-2">
+                            <span class="text-base font-bold text-slate-900">${formattedTime}</span>
+                            <span class="text-xs text-slate-400">(${formatDuration(target.key + lunchMins)} elapsed)</span>
+                        </div>
+                    </td>
+                    <td class="py-4 px-6 text-right">${statusBadge}</td>
+                `;
+                proposedTableBody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+    </script>
+</body>
+</html>
